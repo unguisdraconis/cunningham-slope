@@ -177,7 +177,12 @@ const rawData: Dancer[] = [
 
 // ─── Highlight config ────────────────────────────────────────────────────────
 const TENURE_HIGHLIGHT_COUNT = 8;
-const MANUAL_HIGHLIGHTS = ["Donald McKayle"];
+const MANUAL_HIGHLIGHTS: { name: string; url?: string }[] = [
+  {
+    name: "Donald McKayle",
+    url: "https://ailey.org/people/donald-mckayle",
+  },
+];
 const HIGHLIGHT_COLOR_TENURE = "#f59e0b";
 const HIGHLIGHT_COLOR_MANUAL = "#ef4444";
 
