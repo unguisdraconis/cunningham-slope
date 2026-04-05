@@ -668,6 +668,10 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
         Data: {filteredData.length} dancers shown · Merce Cunningham Dance
         Company (1942–2011)
       </p>
+      <p style={{ color: "#475569", fontSize: 11, marginTop: 12 }}>
+        Source: https://zenodo.org/records/3774548 CC BY 4.0 International ·
+        Code developed using Claude Opus 4.6
+      </p>
     </div>
   );
 };
