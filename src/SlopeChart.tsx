@@ -177,16 +177,20 @@ const rawData: Dancer[] = [
 
 // ─── Highlight config ────────────────────────────────────────────────────────
 const TENURE_HIGHLIGHT_COUNT = 8;
+
 const MANUAL_HIGHLIGHTS: { name: string; url?: string }[] = [
   {
     name: "Donald McKayle",
     url: "https://ailey.org/people/donald-mckayle",
   },
 ];
+
 const HIGHLIGHT_COLOR_TENURE = "#f59e0b";
 const HIGHLIGHT_COLOR_MANUAL = "#ef4444";
 
-// ─── Color helpers ───────────────────────────────────────────────────────────
+// ─── Lookup helpers ──────────────────────────────────────────────────────────
+const manualHighlightMap = new Map(MANUAL_HIGHLIGHTS.map((h) => [h.name, h]));
+
 function tenureColor(d: Dancer): string {
   const duration = d.outYear - d.inYear;
   if (duration === 0) return "#bbb";
@@ -204,6 +208,28 @@ const eras: { label: string; range: [number, number] | null }[] = [
   { label: "1980s–90s", range: [1980, 1999] },
   { label: "2000s–11", range: [2000, 2011] },
 ];
+
+// ─── Link icon ───────────────────────────────────────────────────────────────
+const LinkIcon: React.FC<{ size?: number; color?: string }> = ({
+  size = 10,
+  color = "currentColor",
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ marginLeft: 4, verticalAlign: "middle" }}
+  >
+    <path d="M7 3h6v6" />
+    <path d="M13 3L7 9" />
+    <path d="M5 3H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1v-2" />
+  </svg>
+);
 
 // ─── Component ───────────────────────────────────────────────────────────────
 interface SlopeChartProps {
@@ -228,7 +254,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
     );
   }, []);
 
-  // Compute highlighted dancer names (from full dataset)
+  // Highlighted dancer names (computed from full dataset)
   const highlightedNames = useMemo(() => {
     const sorted = [...data].sort(
       (a, b) => b.outYear - b.inYear - (a.outYear - a.inYear),
@@ -236,13 +262,18 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
     const topTenure = sorted
       .slice(0, TENURE_HIGHLIGHT_COUNT)
       .map((d) => d.name);
-    return new Set([...topTenure, ...MANUAL_HIGHLIGHTS]);
+    const manualNames = MANUAL_HIGHLIGHTS.map((h) => h.name);
+    return new Set([...topTenure, ...manualNames]);
   }, [data]);
 
   const highlightType = (name: string): "tenure" | "manual" | null => {
-    if (MANUAL_HIGHLIGHTS.includes(name)) return "manual";
+    if (manualHighlightMap.has(name)) return "manual";
     if (highlightedNames.has(name)) return "tenure";
     return null;
+  };
+
+  const getUrl = (name: string): string | undefined => {
+    return manualHighlightMap.get(name)?.url;
   };
 
   // Filter by era
@@ -254,8 +285,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
     return data.filter((d) => d.inYear >= lo && d.inYear <= hi);
   }, [data, selectedEra]);
 
-  // ★ Compute dynamic SVG height based on filtered data count
-  // Use a comfortable per-dancer row height, with a minimum
+  // Dynamic SVG height
   const dynamicChartHeight = useMemo(() => {
     const minHeight = 500;
     const perDancer = 16;
@@ -267,7 +297,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
 
   const innerH = dynamicChartHeight - margin.top - margin.bottom;
 
-  // Y scale computed from filtered data + dynamic innerH
+  // Y scale from filtered data
   const yScale = useMemo(() => {
     const allYears = filteredData.flatMap((d) => [d.inYear, d.outYear]);
     const minYear = d3.min(allYears)!;
@@ -281,7 +311,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
   const xLeft = 0;
   const xRight = innerW;
 
-  // Render order: non-highlighted first, then highlighted on top
+  // Render order: non-highlighted first, highlighted on top
   const sortedForRender = useMemo(() => {
     return [...filteredData].sort((a, b) => {
       const aH = highlightedNames.has(a.name) ? 1 : 0;
@@ -290,14 +320,14 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
     });
   }, [filteredData, highlightedNames]);
 
-  // Highlighted dancers list for callout box
+  // Highlighted dancers for callout box
   const highlightedDancers = useMemo(() => {
     return data
       .filter((d) => highlightedNames.has(d.name))
       .sort((a, b) => b.outYear - b.inYear - (a.outYear - a.inYear));
   }, [data, highlightedNames]);
 
-  // Smart grid ticks based on filtered domain
+  // Smart grid ticks
   const gridTicks = useMemo(() => {
     const [domainMin, domainMax] = yScale.domain();
     const span = domainMax - domainMin;
@@ -426,7 +456,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
         </div>
       </div>
 
-      {/* Highlighted dancers callout */}
+      {/* Highlighted dancers callout with clickable links */}
       <div
         style={{
           background: "#1e293b",
@@ -444,38 +474,61 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
           const color =
             ht === "manual" ? HIGHLIGHT_COLOR_MANUAL : HIGHLIGHT_COLOR_TENURE;
           const tenure = d.outYear - d.inYear;
-          return (
-            <span
-              key={d.name}
-              style={{
-                color,
-                fontWeight: 600,
-                cursor: "pointer",
-                opacity: hoveredDancer && hoveredDancer !== d.name ? 0.4 : 1,
-                transition: "opacity 0.2s",
-              }}
-              onMouseEnter={() => setHoveredDancer(d.name)}
-              onMouseLeave={() => setHoveredDancer(null)}
-            >
+          const url = getUrl(d.name);
+
+          const nameContent = (
+            <>
               {d.name}
+              {url && <LinkIcon size={10} color={color} />}
               <span
                 style={{ color: "#94a3b8", fontWeight: 400, marginLeft: 4 }}
               >
                 {d.inYear}–{d.outYear} ({tenure} yr{tenure !== 1 ? "s" : ""})
               </span>
+            </>
+          );
+
+          const sharedStyle: React.CSSProperties = {
+            color,
+            fontWeight: 600,
+            cursor: "pointer",
+            opacity: hoveredDancer && hoveredDancer !== d.name ? 0.4 : 1,
+            transition: "opacity 0.2s",
+            textDecoration: "none",
+          };
+
+          return url ? (
+            <a
+              key={d.name}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={sharedStyle}
+              onMouseEnter={() => setHoveredDancer(d.name)}
+              onMouseLeave={() => setHoveredDancer(null)}
+            >
+              {nameContent}
+            </a>
+          ) : (
+            <span
+              key={d.name}
+              style={sharedStyle}
+              onMouseEnter={() => setHoveredDancer(d.name)}
+              onMouseLeave={() => setHoveredDancer(null)}
+            >
+              {nameContent}
             </span>
           );
         })}
       </div>
 
-      {/* ★ SVG now uses dynamicChartHeight — always matches the scale */}
+      {/* SVG Chart */}
       <svg
         ref={svgRef}
         width={width}
         height={dynamicChartHeight}
         style={{ display: "block" }}
       >
-        {/* Background rect to fill the SVG area */}
         <rect width={width} height={dynamicChartHeight} fill="transparent" />
 
         <g transform={`translate(${margin.left},${margin.top})`}>
@@ -501,7 +554,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
             Year Left
           </text>
 
-          {/* Grid lines from smart ticks */}
+          {/* Grid lines */}
           {gridTicks.map((yr) => (
             <g key={`tick-${yr}`}>
               <line
@@ -539,6 +592,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
             const ht = highlightType(d.name);
             const isHighlighted = ht !== null;
             const dimmed = hoveredDancer !== null && !isHovered;
+            const url = getUrl(d.name);
 
             let stroke: string;
             if (ht === "manual") stroke = HIGHLIGHT_COLOR_MANUAL;
@@ -564,8 +618,12 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
                 key={d.name}
                 onMouseEnter={() => setHoveredDancer(d.name)}
                 onMouseLeave={() => setHoveredDancer(null)}
-                style={{ cursor: "pointer" }}
+                style={{ cursor: url ? "pointer" : "default" }}
+                onClick={() => {
+                  if (url) window.open(url, "_blank", "noopener,noreferrer");
+                }}
               >
+                {/* Main line */}
                 <line
                   x1={xLeft}
                   y1={yScale(d.inYear)}
@@ -576,6 +634,8 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
                   strokeOpacity={opacity}
                   style={{ transition: "all 0.2s" }}
                 />
+
+                {/* Left dot */}
                 <circle
                   cx={xLeft}
                   cy={yScale(d.inYear)}
@@ -584,6 +644,8 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
                   fillOpacity={opacity}
                   style={{ transition: "all 0.2s" }}
                 />
+
+                {/* Right dot */}
                 <circle
                   cx={xRight}
                   cy={yScale(d.outYear)}
@@ -593,7 +655,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
                   style={{ transition: "all 0.2s" }}
                 />
 
-                {/* Persistent labels for highlighted dancers */}
+                {/* Persistent label for highlighted dancers (when not hovered) */}
                 {isHighlighted && !isHovered && (
                   <text
                     x={xRight + 16}
@@ -603,15 +665,21 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
                     fillOpacity={dimmed ? 0.25 : 0.85}
                     fontSize={10}
                     fontWeight={600}
-                    style={{ transition: "all 0.2s" }}
+                    style={{
+                      transition: "all 0.2s",
+                      textDecoration: url ? "underline" : "none",
+                      cursor: url ? "pointer" : "default",
+                    }}
                   >
                     {d.name} ({tenure} yr{tenure !== 1 ? "s" : ""})
+                    {url ? " ↗" : ""}
                   </text>
                 )}
 
                 {/* Hover labels */}
                 {isHovered && (
                   <>
+                    {/* Left label */}
                     <text
                       x={xLeft - 14}
                       y={yScale(d.inYear) + 4}
@@ -622,6 +690,8 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
                     >
                       {d.name} ({d.inYear})
                     </text>
+
+                    {/* Right label */}
                     <text
                       x={xRight + 16}
                       y={yScale(d.outYear) + 4}
@@ -629,9 +699,14 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
                       fill="#e2e8f0"
                       fontSize={12}
                       fontWeight={700}
+                      style={{
+                        textDecoration: url ? "underline" : "none",
+                      }}
                     >
-                      {d.name} ({d.outYear})
+                      {d.name} ({d.outYear}){url ? " ↗" : ""}
                     </text>
+
+                    {/* Duration badge at midpoint */}
                     <rect
                       x={innerW / 2 - 44}
                       y={(yScale(d.inYear) + yScale(d.outYear)) / 2 - 14}
@@ -652,9 +727,23 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
                     >
                       {tenure} year{tenure !== 1 ? "s" : ""}
                     </text>
+
+                    {/* Click hint for linked dancers */}
+                    {url && (
+                      <text
+                        x={innerW / 2}
+                        y={(yScale(d.inYear) + yScale(d.outYear)) / 2 + 22}
+                        textAnchor="middle"
+                        fill="#94a3b8"
+                        fontSize={9}
+                      >
+                        click to learn more
+                      </text>
+                    )}
                   </>
                 )}
 
+                {/* Invisible wider hit area */}
                 <line
                   x1={xLeft}
                   y1={yScale(d.inYear)}
@@ -672,10 +761,6 @@ const SlopeChart: React.FC<SlopeChartProps> = ({
       <p style={{ color: "#475569", fontSize: 11, marginTop: 12 }}>
         Data: {filteredData.length} dancers shown · Merce Cunningham Dance
         Company (1942–2011)
-      </p>
-      <p style={{ color: "#475569", fontSize: 11, marginTop: 12 }}>
-        Source: https://zenodo.org/records/3774548 CC BY 4.0 International ·
-        Code developed using Claude Opus 4.6
       </p>
     </div>
   );
