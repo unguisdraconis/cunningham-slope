@@ -234,13 +234,9 @@ const LinkIcon: React.FC<{ size?: number; color?: string }> = ({
 // ─── Component ───────────────────────────────────────────────────────────────
 interface SlopeChartProps {
   width?: number;
-  height?: number;
 }
 
-const SlopeChart: React.FC<SlopeChartProps> = ({
-  width = 960,
-  height = 1800,
-}) => {
+const SlopeChart: React.FC<SlopeChartProps> = ({ width = 960 }) => {
   const [hoveredDancer, setHoveredDancer] = useState<string | null>(null);
   const [selectedEra, setSelectedEra] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
