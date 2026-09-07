@@ -353,13 +353,15 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ width = 960 }) => {
     >
       {/* Title */}
       <h2 style={{ color: "#e2e8f0", margin: "0 0 4px 0", fontSize: 22 }}>
-        Merce Cunningham Dance Company — Dancer Tenures
+        Cunningham Dancers — First-to-Last Recorded Spans
       </h2>
       <p style={{ color: "#94a3b8", margin: "0 0 16px 0", fontSize: 13 }}>
-        Each line connects a dancer's{" "}
-        <strong style={{ color: "#93c5fd" }}>year joined</strong> (left) to
-        their <strong style={{ color: "#93c5fd" }}>year departed</strong>{" "}
-        (right). Hover for details.
+        Each line connects an embedded dancer record's{" "}
+        <strong style={{ color: "#93c5fd" }}>first recorded year</strong>{" "}
+        (left) to its{" "}
+        <strong style={{ color: "#93c5fd" }}>last recorded year</strong>{" "}
+        (right). The difference is an elapsed-year span, not uninterrupted
+        tenure. Hover for details.
       </p>
 
       {/* Era filter buttons */}
@@ -435,7 +437,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ width = 960 }) => {
                 borderRadius: 2,
               }}
             />
-            Top {TENURE_HIGHLIGHT_COUNT} longest tenures
+            Eight longest recorded spans across all records
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span
@@ -537,7 +539,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ width = 960 }) => {
             fontSize={13}
             fontWeight={700}
           >
-            Year Joined
+            First recorded year
           </text>
           <text
             x={xRight}
@@ -547,7 +549,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ width = 960 }) => {
             fontSize={13}
             fontWeight={700}
           >
-            Year Left
+            Last recorded year
           </text>
 
           {/* Grid lines */}
@@ -721,7 +723,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ width = 960 }) => {
                       fontSize={12}
                       fontWeight={700}
                     >
-                      {tenure} year{tenure !== 1 ? "s" : ""}
+                      {tenure}-year span
                     </text>
 
                     {/* Click hint for linked dancers */}
@@ -755,8 +757,8 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ width = 960 }) => {
       </svg>
 
       <p style={{ color: "#475569", fontSize: 11, marginTop: 12 }}>
-        Data: {filteredData.length} dancers shown · Merce Cunningham Dance
-        Company (1942–2011)
+        Data: {filteredData.length} embedded dancer records shown · Merce
+        Cunningham-related records (1942–2011)
       </p>
     </div>
   );
