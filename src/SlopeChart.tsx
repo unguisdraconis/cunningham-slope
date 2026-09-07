@@ -217,6 +217,8 @@ const LinkIcon: React.FC<{ size?: number; color?: string }> = ({
   <svg
     width={size}
     height={size}
+    aria-hidden="true"
+    focusable="false"
     viewBox="0 0 16 16"
     fill="none"
     stroke={color}
@@ -369,7 +371,11 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ width = 960 }) => {
         {eras.map((era) => (
           <button
             key={era.label}
+            className="era-filter-button"
             onClick={() => setSelectedEra(era.range ? era.label : null)}
+            aria-pressed={
+              selectedEra === era.label || (!selectedEra && !era.range)
+            }
             style={{
               padding: "6px 14px",
               borderRadius: 6,
@@ -392,6 +398,16 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ width = 960 }) => {
           </button>
         ))}
       </div>
+
+      <p
+        id="slope-chart-summary"
+        aria-live="polite"
+        style={{ color: "#cbd5e1", margin: "0 0 16px 0", fontSize: 12 }}
+      >
+        Active era filter: {selectedEra ?? "All"}. {filteredData.length} dancer
+        records displayed. Recorded span equals last recorded year minus first
+        recorded year; it does not establish uninterrupted tenure.
+      </p>
 
       {/* Legends row */}
       <div
@@ -498,9 +514,11 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ width = 960 }) => {
           return url ? (
             <a
               key={d.name}
+              className="featured-dancer-link"
               href={url}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={`Learn more about ${d.name}, ${d.inYear} to ${d.outYear}, ${tenure}-year recorded span`}
               style={sharedStyle}
               onMouseEnter={() => setHoveredDancer(d.name)}
               onMouseLeave={() => setHoveredDancer(null)}
@@ -525,8 +543,19 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ width = 960 }) => {
         ref={svgRef}
         width={width}
         height={dynamicChartHeight}
+        role="img"
+        aria-labelledby="slope-chart-title slope-chart-description"
         style={{ display: "block" }}
       >
+        <title id="slope-chart-title">
+          Cunningham dancers: first-to-last recorded spans
+        </title>
+        <desc id="slope-chart-description">
+          One line per embedded dancer record connects the first recorded year
+          on the left to the last recorded year on the right. Slope shows the
+          elapsed year span, and color groups spans into broad ranges. The era
+          buttons filter records by first recorded year.
+        </desc>
         <rect width={width} height={dynamicChartHeight} fill="transparent" />
 
         <g transform={`translate(${margin.left},${margin.top})`}>

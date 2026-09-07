@@ -81,3 +81,9 @@ h2 {
 p {
   margin: 0;
 }
+
+.era-filter-button:focus-visible,
+.featured-dancer-link:focus-visible {
+  outline: 3px solid #f8fafc;
+  outline-offset: 3px;
+}
