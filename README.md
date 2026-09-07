@@ -10,6 +10,8 @@ It is a secondary artifact in Jeremiah King's broader Cunningham visualization e
 
 [Open Cunningham Dancer Spans](https://unguisdraconis.github.io/cunningham-slope/)
 
+![Interactive Cunningham Dance Spans comparison chart.](docs/images/cunningham-slope.png)
+
 ## What the chart shows
 
 - The left endpoint is a dancer's first recorded year.
@@ -28,7 +30,7 @@ The visualization simplifies each dancer to one first-to-last recorded span. Int
 
 The embedded dancer data is derived from Cunningham dancer records associated with:
 
-> Clarisse Bardiot. *Merce Cunningham*. Version 1. Zenodo. [doi:10.5281/zenodo.3774548](https://doi.org/10.5281/zenodo.3774548).
+> Clarisse Bardiot. _Merce Cunningham_. Version 1. Zenodo. [doi:10.5281/zenodo.3774548](https://doi.org/10.5281/zenodo.3774548).
 
 The relevant upstream file is `donnees-danseurs.csv`. The source dataset is licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
 
