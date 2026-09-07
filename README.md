@@ -6,7 +6,7 @@ Cunningham Dancer Spans is a learning visualization that uses a React, D3, and T
 
 It is a secondary artifact in Jeremiah King's broader Cunningham visualization experiments. It preserves a particular visualization form and learning stage rather than presenting a comprehensive historical analysis.
 
-Created for Day 4 (“Slope”) of the 2026 #30DayChartChallenge. I used the prompt to explore first-to-last recorded year spans in the Merce Cunningham dancer data with a React, D3, and TypeScript slope chart.
+Created for Day 4 (“Slope”) of the 2026 [#30DayChartChallenge](https://github.com/30DayChartChallenge/Edition2026/blob/main/list_prompts.md?utm_source=chatgpt.com). I used the prompt to explore first-to-last recorded year spans in the Merce Cunningham dancer data with a React, D3, and TypeScript slope chart.
 
 ## Live demo
 
